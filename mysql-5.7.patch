@@ -1,0 +1,64 @@
+From 60bd6d02bd7574690594bc089e2f75e864afde54 Mon Sep 17 00:00:00 2001
+From: AgentSIB <agentsib@gmail.com>
+Date: Thu, 12 Jul 2018 22:31:26 +0300
+Subject: [PATCH] mysql-5.7
+
+---
+ configure.ac    | 2 +-
+ src/ha_pinba.cc | 6 ++----
+ 2 files changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index 538a8c6..7e1747e 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -175,7 +175,7 @@ main() {
+   CFLAGS="$CFLAGS_old"
+ 
+   AC_DEFINE([MYSQL_SRC], [1], [Source directory for MySQL])
+-  MYSQL_INC="-I$with_mysql/sql -I$with_mysql/include -I$with_mysql/regex -I$with_mysql"
++  MYSQL_INC="-I$with_mysql/sql -I$with_mysql/include -I$with_mysql/regex -I$with_mysql -I$with_mysql/libbinlogevents/export -I$with_mysql/libbinlogevents/include"
+ fi
+ 
+ 
+diff --git a/src/ha_pinba.cc b/src/ha_pinba.cc
+index 4046481..26324a4 100644
+--- a/src/ha_pinba.cc
++++ b/src/ha_pinba.cc
+@@ -34,7 +34,6 @@
+ #ifdef PINBA_ENGINE_MYSQL_VERSION_5_5
+ # include <include/mysql_version.h>
+ # include <sql/field.h>
+-# include <sql/structs.h>
+ # include <sql/handler.h>
+ #else
+ # include <mysql_priv.h>
+@@ -42,7 +41,6 @@
+ #include <my_dir.h>
+ #include <mysql/plugin.h>
+ #include <mysql.h>
+-#include <my_pthread.h>
+ 
+ #include "ha_pinba.h"
+ #include "pinba_map.h"
+@@ -606,7 +604,7 @@ static int pinba_engine_init(void *p) /* {{{ */
+ 		DBUG_RETURN(1);
+ 	}
+ 
+-	(void)hash_init(&pinba_open_tables, system_charset_info, 32, 0, 0, (hash_get_key)pinba_get_key, 0, 0);
++	(void)hash_init(&pinba_open_tables, system_charset_info, 32, 0, 0, (hash_get_key)pinba_get_key, 0, 0, 0);
+ 
+ 	pinba_hton->state = SHOW_OPTION_YES;
+ 	pinba_hton->create = pinba_create_handler;
+@@ -1875,7 +1873,7 @@ static PINBA_SHARE *get_share(const char *table_name, TABLE *table) /* {{{ */
+ 			return NULL;
+ 		}
+ 
+-		if (!my_multi_malloc(MYF(MY_WME | MY_ZEROFILL), &share, sizeof(*share), &tmp_name, length+1, NullS)) {
++		if (!my_multi_malloc(PSI_NOT_INSTRUMENTED, MYF(MY_WME | MY_ZEROFILL), &share, sizeof(*share), &tmp_name, length+1, NullS)) {
+ 			pthread_mutex_unlock(&D->share_mutex);
+ 			return NULL;
+ 		}
+-- 
+2.18.0
+
